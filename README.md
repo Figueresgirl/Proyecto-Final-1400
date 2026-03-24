@@ -158,6 +158,4 @@ Conclusión
 
 Este proyecto demuestra la implementación completa de un sistema interactivo basado en la técnica Pomodoro, integrando diseño lógico (flowchart), pseudocódigo y desarrollo en Python.
 
-
-
 El resultado es una aplicación funcional que combina organización, control del tiempo y experiencia de usuario
