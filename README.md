@@ -1,238 +1,180 @@
 Proyecto-Final-1400
 Widget Flotante Pomodoro
 
-Desarrollo del Diseño
+Descripción del Proyecto
+    El Widget Flotante Pomodoro es una aplicación desarrollada en Python utilizando Tkinter.
+    Permite gestionar tareas y controlar sesiones de enfoque mediante la técnica Pomodoro.
 
-Proyecto: Widget Flotante Pomodoro
-El programa consiste en un widget flotante que ayuda al usuario a organizar sus tareas usando la técnica Pomodoro. El sistema permite:
+    El sistema integra:
+        - Gestión de tareas (agregar, eliminar, completar)
+        - Prioridades (Alta, Media, Baja)
+        - Temporizador con cuenta regresiva
+        - Periodos de descanso automáticos
+        - Mensajes dentro del widget
+        - Interfaz flotante siempre visible
 
-agregar tareas,
-asignar prioridades,
-seleccionar una tarea,
-ingresar un tiempo de enfoque,
-iniciar un temporizador,
-pausar, reiniciar, completar o eliminar tareas,
-y repetir sesiones de trabajo.
+Integrantes
+    - Thais Medina
+    - Pedro Ibanez
+    - Jesús Hernan (c)
 
-El diseño lógico del programa incluye:
+Estructura del Programa
+    Proyecto/
+        main.py              -    lógica principal
+        tareas.json         -    almacenamiento (no implementado completamente)
+        pomodoroApp.py  - interfaz gráfica
+        README.md
 
-Condicional 1: verificar si el usuario desea agregar una tarea.
-Condicional 2: verificar si la prioridad fue seleccionada correctamente.
-Condicional 3: verificar si el tiempo ingresado es válido.
-ondicional 4: verificar si el tiempo terminó.
-Bucle: mientras el tiempo restante sea mayor que cero, el temporizador sigue contando hacia atrás
+Funcionamiento del Sistema
+    Inicio
+        Crear ventana con Tkinter
+        Configurar widget flotante (always on top)
+        Mostrar interfaz
 
-Explicación del Flowchart
+    Usuario puede:
+        - Agregar tarea
+        - Seleccionar tarea
+        - Eliminar tarea
+        - Iniciar temporizador
+        - Pausar
+        - Completar tarea
 
-El flujo del programa comienza con la inicialización del sistema y la creación de variables principales, como la lista de tareas y el temporizador.
+    Si el usuario inicia:
+        Verificar que haya tarea seleccionada
+        Verificar que el tiempo sea válido
 
-Después, el widget flotante se muestra en pantalla con los botones de acción. El sistema queda esperando una acción del usuario.
+        Si es válido:
+            Convertir minutos a segundos
+            Iniciar temporizador
 
-Rutas principales del flujo:
+    Mientras tiempo > 0:
+        Actualizar cronómetro cada segundo usando after()
 
-1. Agregar tarea
+    Cuando tiempo termina:
+        Mostrar mensaje dentro del widget
+        Esperar acción del usuario
 
-   El usuario escribe el nombre de la tarea.
-   El sistema verifica si se seleccionó una prioridad.
-   Si la prioridad es válida, se asigna un color:
+    Si tarea se completa:
+        Marcar como completada
+        Iniciar descanso automático
 
-     Alta = rojo
-     Media = amarillo
-     Baja = verde
-     Luego la tarea se guarda y la interfaz se actualiza.
+    Durante descanso:
+        Ejecutar temporizador de descanso
+        Mostrar mensaje correspondiente
 
-2. Iniciar temporizador
-
-   El usuario selecciona una tarea.
-   Ingresa el tiempo de enfoque.
-   El sistema valida si el tiempo es correcto.
-   Si es válido, inicia el temporizador.
-   Mientras el tiempo restante sea mayor a 0, el sistema:
-
-     -muestra el tiempo en pantalla,
-     -espera un segundo,
-     -reduce el contador.
-    Al terminar, muestra un mensaje motivacional y marca la tarea como completada.
-
-3. Nueva sesión
-
-   El sistema pregunta si el usuario desea iniciar otra sesión.
-   Si responde sí, vuelve al flujo principal.
-   Si responde no, finaliza el programa.
-
+    Fin
 
 Pseudocódigo
+    INICIO
 
-#Widget Flotante Pomodoro
+        Crear lista de tareas
 
-```text
-INICIO
+        Crear interfaz gráfica
 
-# ----------------------------------------
-# Inicialización del programa
-# ----------------------------------------
+        MIENTRAS programa activo
 
-Mostrar "Bienvenido al Widget Flotante Pomodoro"
-Mostrar "Este programa te ayudará a organizar tareas y sesiones de enfoque"
+            SI usuario presiona "Agregar"
+                Leer nombre
+                Leer tiempo
+                Leer prioridad
 
-Crear lista_tareas vacía
-Crear tarea_seleccionada = vacío
-Crear tiempo_restante = 0
-Crear temporizador_activo = Falso
-Crear opcion = ""
-
-# ----------------------------------------
-# Bucle principal del sistema
-# ----------------------------------------
-
-MIENTRAS opcion != "salir"
-
-    Mostrar "-----------------------------------"
-    Mostrar "Opciones disponibles:"
-    Mostrar "1. Agregar tarea"
-    Mostrar "2. Iniciar temporizador"
-    Mostrar "3. Pausar temporizador"
-    Mostrar "4. Reiniciar temporizador"
-    Mostrar "5. Completar tarea"
-    Mostrar "6. Eliminar tarea"
-    Mostrar "7. Ver lista de tareas"
-    Mostrar "8. Salir"
-
-    Leer opcion
-
-    # ----------------------------------------
-    # Opción 1: Agregar tarea
-    # ----------------------------------------
-    SI opcion == "1" ENTONCES
-        Mostrar "Ingrese el nombre de la tarea:"
-        Leer nombre_tarea
-
-        Mostrar "Seleccione prioridad: alta, media o baja"
-        Leer prioridad
-
-        SI prioridad == "alta" O prioridad == "media" O prioridad == "baja" ENTONCES
-            
-            SI prioridad == "alta" ENTONCES
-                color = "rojo"
-            SINO SI prioridad == "media" ENTONCES
-                color = "amarillo"
-            SINO
-                color = "verde"
+                SI datos válidos
+                    Crear tarea
+                    Guardar en lista
+                    Actualizar interfaz
+                SINO
+                    Mostrar error
+                FIN SI
             FIN SI
 
-            Guardar nombre_tarea y prioridad en lista_tareas
-            Mostrar "Tarea agregada correctamente"
-            Mostrar "Color asignado según prioridad: " + color
+            SI usuario selecciona tarea
+                Guardar índice seleccionado
+            FIN SI
 
-        SINO
-            Mostrar "Error: prioridad no válida"
-        FIN SI
-    FIN SI
+            SI usuario presiona "Eliminar"
+                Verificar selección
+                Eliminar tarea de lista
+                Actualizar interfaz
+            FIN SI
 
-    # ----------------------------------------
-    # Opción 2: Iniciar temporizador
-    # ----------------------------------------
-    SI opcion == "2" ENTONCES
-        
-        SI lista_tareas está vacía ENTONCES
-            Mostrar "No hay tareas registradas"
-        SINO
-            Mostrar "Seleccione una tarea de la lista"
-            Mostrar lista_tareas
-            Leer tarea_seleccionada
+            SI usuario presiona "Comenzar"
 
-            Mostrar "Ingrese el tiempo de enfoque en minutos:"
-            Leer tiempo_ingresado
+                SI ya está corriendo
+                    Mostrar mensaje
+                SINO
 
-            SI tiempo_ingresado > 0 ENTONCES
-                tiempo_restante = tiempo_ingresado * 60
-                temporizador_activo = Verdadero
+                    SI hay tarea seleccionada
 
-                Mostrar "Temporizador iniciado"
+                        SI tiempo válido
 
-                MIENTRAS tiempo_restante > 0 Y temporizador_activo == Verdadero
-                    Mostrar "Tiempo restante: " + tiempo_restante + " segundos"
-                    Esperar 1 segundo
-                    tiempo_restante = tiempo_restante - 1
-                FIN MIENTRAS
+                            tiempo_restante = tiempo * 60
 
-                SI tiempo_restante == 0 ENTONCES
-                    Mostrar "¡Tiempo terminado!"
-                    Mostrar "Excelente trabajo, sigue así. Te has ganado un regalo sorpresa."
-                    Mostrar "La tarea puede marcarse como completada"
+                            MIENTRAS tiempo_restante > 0
+                                Mostrar tiempo
+                                Esperar 1 segundo (after)
+                                tiempo_restante = tiempo_restante - 1
+                            FIN MIENTRAS
+
+                            Mostrar mensaje "Tiempo terminado"
+
+                        SINO
+                            Mostrar error
+                        FIN SI
+
+                    SINO
+                        Mostrar mensaje "Selecciona tarea"
+                    FIN SI
+
                 FIN SI
 
-            SINO
-                Mostrar "Error: el tiempo debe ser mayor que cero"
             FIN SI
-        FIN SI
-    FIN SI
 
-    # ----------------------------------------
-    # Opción 3: Pausar temporizador
-    # ----------------------------------------
-    SI opcion == "3" ENTONCES
-        SI temporizador_activo == Verdadero ENTONCES
-            temporizador_activo = Falso
-            Mostrar "Temporizador pausado"
-        SINO
-            Mostrar "No hay temporizador en ejecución"
-        FIN SI
-    FIN SI
+            SI usuario presiona "Pausar"
+                Detener temporizador
+            FIN SI
 
-    # ----------------------------------------
-    # Opción 4: Reiniciar temporizador
-    # ----------------------------------------
-    SI opcion == "4" ENTONCES
-        tiempo_restante = 0
-        temporizador_activo = Falso
-        Mostrar "Temporizador reiniciado"
-    FIN SI
+            SI usuario presiona "Completar"
+                Marcar tarea como completada
+                Iniciar descanso
+            FIN SI
 
-    # ----------------------------------------
-    # Opción 5: Completar tarea
-    # ----------------------------------------
-    SI opcion == "5" ENTONCES
-        Mostrar "Seleccione la tarea que desea completar"
-        Mostrar lista_tareas
-        Leer tarea_seleccionada
-        Marcar tarea_seleccionada como completada
-        Mostrar "Tarea completada con éxito"
-    FIN SI
+        FIN MIENTRAS
 
-    # ----------------------------------------
-    # Opción 6: Eliminar tarea
-    # ----------------------------------------
-    SI opcion == "6" ENTONCES
-        Mostrar "Seleccione la tarea que desea eliminar"
-        Mostrar lista_tareas
-        Leer tarea_seleccionada
-        Eliminar tarea_seleccionada de lista_tareas
-        Mostrar "Tarea eliminada correctamente"
-    FIN SI
+    FIN
 
-    # ----------------------------------------
-    # Opción 7: Ver tareas
-    # ----------------------------------------
-    SI opcion == "7" ENTONCES
-        Mostrar "Lista actual de tareas:"
-        Mostrar lista_tareas
-    FIN SI
+Conceptos Aplicados
+    - Condicionales (if / else)
+    - Eventos de interfaz (botones)
+    - Temporizador con after()
+    - Manejo de listas y diccionarios
+    - Programación orientada a objetos
+    - Validación de datos del usuario
 
-    # ----------------------------------------
-    # Opción 8: Salir
-    # ----------------------------------------
-    SI opcion == "8" ENTONCES
-        opcion = "salir"
-        Mostrar "Cerrando el Widget Flotante Pomodoro"
-    FIN SI
+Decisiones Técnicas
+    1. Uso de after() en lugar de while
+        Evita que la interfaz se congele
 
-FIN MIENTRAS
+    2. Separación por clases
+        Pomodoro -> datos
+        PomodoroApp -> interfaz y control
 
-Mostrar "Programa finalizado"
+    3. Interfaz dinámica
+        Se ocultan y muestran controles según el estado
 
-FIN
+    4. Colores por prioridad
+        Alta -> rojo
+        Media -> naranja
+        Baja -> verde
+        Completada -> gris
 
-Conclusión:
-Este diseño representa la lógica inicial del programa Widget Flotante Pomodoro. El flowchart permite visualizar cómo fluye la interacción del usuario con las tareas, prioridades, botones y temporizador. El pseudocódigo traduce esa lógica a pasos claros y ordenados, facilitando su futura implementación en Python.
-*********************************************************************************************************************************
+Requisitos
+    - Python 3.x
+    - Tkinter (incluido por defecto)
+
+Conclusión
+    Este proyecto implementa una aplicación funcional que integra
+    interfaz gráfica, control de flujo y manejo de eventos.
+
+    Demuestra la aplicación práctica de los conceptos aprendidos en clase
+    y representa una solución real para la gestión del tiempo y tareas.
+
