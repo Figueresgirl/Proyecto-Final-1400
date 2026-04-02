@@ -2,7 +2,7 @@ import tkinter as tk
 # import json
 # import os
 
-
+BLOQUE 1: INTRODUCCIÓN DE VARIABLES Y VENTANA
 class Pomodoro:
     def __init__(self):
         self.archivo = "tareas.json"
