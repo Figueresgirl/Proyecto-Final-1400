@@ -2,7 +2,7 @@ import tkinter as tk
 # import json
 # import os
 
-
+#BLOQUE 1: INTRODUCCIÓN DE VARIABLES Y VENTANA
 class Pomodoro:
     def __init__(self):
         self.archivo = "tareas.json"
@@ -163,7 +163,8 @@ class PomodoroApp:
             command=self.salir
         )
         self.boton_salir.pack(pady=2)
-
+        
+    #BLOQUE 2: CONTROL DEL TEMPORIZADOR
     def ocultar_controles(self):
         self.titulo.pack_forget()
         self.label_nombre.pack_forget()
@@ -291,7 +292,8 @@ class PomodoroApp:
         self.pomodoro.tareas.pop(indice)
         self.mostrar_tareas()
         self.mensaje.config(text="")
-
+        
+    #BLOQUE 3: TEMPORIZADOR
     def iniciar(self):
         if self.en_cuenta:
             self.mensaje.config(text="El temporizador ya está corriendo.")
