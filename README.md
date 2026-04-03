@@ -1,24 +1,93 @@
-Proyecto-Final-1400
-Widget Flotante Pomodoro
-
-Descripción del Proyecto
-    El Widget Flotante Pomodoro es una aplicación desarrollada en Python utilizando Tkinter.
-    Es un Widget flotante que permite al usuario:
-
-    - Agregar tareas
-    - Asignar prioridad
-    - Definir tiempo de trabajo
-    - Iniciar un temporizador
-    - Pausar y reiniciar
-    - Completar tareas
-    - Realizar descansos automáticos
-    - El sistema está dividido en bloques que organizan la lógica del programa.
-
-
+Proyecto-Final-1400 - Widget Pomodoro
 Integrantes
     - Thais Medina
     - Pedro Ibanez
     - Jesús Hernan (c)
+
+Descripción del Proyecto
+Este programa es un Widget Pomodoro desarrollado en Python con Tkinter. Permite al usuario:
+- Agregar tareas
+- Asignar prioridad
+- Definir tiempo de trabajo
+- Iniciar un temporizador
+- Pausar y reiniciar
+- Completar tareas
+- Realizar descansos automáticos
+El sistema está dividido en bloques que organizan la lógica del programa.
+--------------------------------------------------
+BLOQUE 1: DATOS DEL SISTEMA
+Código:
+class Pomodoro:
+ def __init__(self):
+ self.archivo = "tareas.json"
+ self.tareas = []
+ self.tiempo_restante = 0
+Qué hace:
+- Guarda el nombre del archivo
+- Almacena tareas
+- Controla tiempo restante
+Explicación:
+Este bloque representa el modelo de datos del sistema.
+--------------------------------------------------
+BLOQUE 2: INICIO E INTERFAZ
+Código:
+class PomodoroApp:
+ def __init__(self):
+ self.root = tk.Tk()
+ self.root.title("Widget Pomodoro")
+ self.root.attributes("-topmost", True)
+ self.pomodoro = Pomodoro()
+ self.en_cuenta = False
+ self.en_descanso = False
+ self.tarea_actual = None
+ self.setup_ui()
+ self.mostrar_tareas()
+def setup_ui(self):
+ self.marco = tk.Frame(self.root)
+ self.entrada = tk.Entry(self.marco)
+ self.lista = tk.Listbox(self.marco)
+ self.timer_label = tk.Label(self.marco)
+Qué hace:
+- Crea ventana
+- Inicializa variables
+- Construye interfaz
+Explicación:
+Este bloque construye todo lo visual.
+--------------------------------------------------
+BLOQUE 3: LÓGICA Y TEMPORIZADOR
+Código:
+def agregar(self):
+ nombre = self.entrada.get().strip()
+ tiempo = self.tiempo_entry.get().strip()
+ if nombre == "" or tiempo == "":
+ return
+ nueva_tarea = {
+ "nombre": nombre,
+ "tiempo": int(tiempo),
+ "completada": False
+ }
+ self.pomodoro.tareas.append(nueva_tarea)
+def iniciar(self):
+ self.pomodoro.tiempo_restante = tarea["tiempo"] * 60
+ self.en_cuenta = True
+ self.contar()
+def contar(self):
+ if self.en_cuenta and self.pomodoro.tiempo_restante > 0:
+ self.pomodoro.tiempo_restante -= 1
+ self.root.after(1000, self.contar)
+Qué hace:
+- Maneja tareas
+- Valida datos
+- Ejecuta temporizador
+Explicación:
+Usa after() para repetir sin congelar la interfaz.
+--------------------------------------------------
+Conclusión
+El programa se divide en:
+- Datos
+- Interfaz
+- Lógica
+El temporizador usa after() en lugar de while.
 
 Estructura del Programa
     Proyecto/
@@ -27,22 +96,6 @@ Estructura del Programa
         pomodoroApp.py  - interfaz gráfica
         README.md
 
-Funcionamiento del Sistema
-    Inicio
-        Crear ventana con Tkinter
-        Configurar widget flotante (always on top)
-        Mostrar interfaz
-
-    Usuario puede:
-        - Agregar tarea
-        - Seleccionar tarea
-        - Eliminar tarea
-        - Iniciar temporizador
-        - Pausar
-        - Completar tarea
-
-    Si el usuario inicia:
-        Verificar que haya tarea seleccionada
         Verificar que el tiempo sea válido
 
         Si es válido:
