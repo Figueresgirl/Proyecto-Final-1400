@@ -12,7 +12,7 @@ Descripción del Proyecto
     - Pausar y reiniciar
     - Completar tareas
     - Realizar descansos automáticos
-    -El sistema está dividido en bloques que organizan la lógica del programa.
+    - El sistema está dividido en bloques que organizan la lógica del programa.
 
 
 Integrantes
