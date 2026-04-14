@@ -4,26 +4,41 @@ import json
 import os
 
 
-# BLOQUE 1: DEFINICIÓN DE LA CLASE PRINCIPAL
-
-
+# ============================================================
+# BLOQUE 1: CLASE PRINCIPAL
+# Esta clase crea la ventana principal y controla toda la lógica
+# del widget Pomodoro.
+# ============================================================
 class PomodoroApp(tk.Tk):
     def __init__(self):
         super().__init__()
 
+        # ----------------------------------------------------
+        # Ajuste de escalado para evitar que Windows agrande
+        # demasiado letras y controles.
+        # ----------------------------------------------------
+        self.tk.call("tk", "scaling", 1.0)
+
+        # ----------------------------------------------------
         # Configuración de la ventana principal
+        # ----------------------------------------------------
         self.title("Widget Pomodoro")
-        self.geometry("500x800")
+        self.geometry("380x640")
         self.resizable(False, False)
 
-        # Archivo donde se guardarán las tareas
+        # ----------------------------------------------------
+        # Archivo JSON donde se guardan las tareas
+        # ----------------------------------------------------
         self.archivo = "tareas.json"
 
-        # Lista que almacena todas las tareas
+        # ----------------------------------------------------
+        # Lista donde se almacenan las tareas
+        # ----------------------------------------------------
         self.tareas = []
 
-        # VARIABLES DEL TEMPORIZADOR
-        
+        # ----------------------------------------------------
+        # Variables del temporizador
+        # ----------------------------------------------------
         self.tiempo_restante = 0
         self.descanso_restante = 0
         self.temporizador_activo = False
@@ -31,250 +46,489 @@ class PomodoroApp(tk.Tk):
         self.after_id = None
         self.indice_actual = None
 
+        # ----------------------------------------------------
         # Variable para guardar la prioridad seleccionada
+        # ----------------------------------------------------
         self.prioridad_var = tk.StringVar(value="Media")
 
-        # Cargar tareas desde archivo JSON
+        # ----------------------------------------------------
+        # Cargar tareas guardadas y construir interfaz
+        # ----------------------------------------------------
         self.cargar_tareas()
-
-        # Crear interfaz gráfica
         self.crear_widgets()
-
-        # Mostrar tareas en pantalla
         self.actualizar_lista()
 
-
-
-# BLOQUE 2: CREACIÓN DE LA INTERFAZ GRÁFICA
-
-
+    # ========================================================
+    # BLOQUE 2: CREACIÓN DE LA INTERFAZ
+    # Aquí se crean etiquetas, entradas, botones y lista.
+    # ========================================================
     def crear_widgets(self):
+        self.titulo = tk.Label(self, text="Widget Pomodoro", font=("Arial", 15, "bold"))
+        self.titulo.pack(pady=10)
 
-        # Título principal
-        self.titulo = tk.Label(self, text="Widget Pomodoro", font=("Arial", 22, "bold"))
-        self.titulo.pack(pady=20)
-
-        # Entrada de nombre de tarea
-        self.label_nombre = tk.Label(self, text="Tarea")
+        self.label_nombre = tk.Label(self, text="Tarea", font=("Arial", 10))
         self.label_nombre.pack()
-        self.entrada = tk.Entry(self)
-        self.entrada.pack()
+        self.entrada = tk.Entry(self, font=("Arial", 10), width=26)
+        self.entrada.pack(pady=3)
 
-        # Entrada de tiempo de trabajo
-        self.label_tiempo = tk.Label(self, text="Minutos de trabajo")
-        self.label_tiempo.pack()
-        self.tiempo_entry = tk.Entry(self)
-        self.tiempo_entry.pack()
+        self.label_tiempo = tk.Label(self, text="Minutos de trabajo", font=("Arial", 10))
+        self.label_tiempo.pack(pady=(6, 0))
+        self.tiempo_entry = tk.Entry(self, font=("Arial", 10), width=8)
+        self.tiempo_entry.pack(pady=3)
 
-        # Entrada de tiempo de descanso
-        self.label_descanso = tk.Label(self, text="Minutos de descanso")
-        self.label_descanso.pack()
-        self.descanso_entry = tk.Entry(self)
-        self.descanso_entry.pack()
+        self.label_descanso = tk.Label(self, text="Minutos de descanso", font=("Arial", 10))
+        self.label_descanso.pack(pady=(6, 0))
+        self.descanso_entry = tk.Entry(self, font=("Arial", 10), width=8)
+        self.descanso_entry.pack(pady=3)
         self.descanso_entry.insert(0, "5")
 
-        # Selección de prioridad
-        self.prioridad_var = tk.StringVar(value="Media")
+        self.label_prioridad = tk.Label(self, text="Prioridad", font=("Arial", 10))
+        self.label_prioridad.pack(pady=(8, 3))
 
-        tk.Radiobutton(self, text="Alta", variable=self.prioridad_var, value="Alta").pack()
-        tk.Radiobutton(self, text="Media", variable=self.prioridad_var, value="Media").pack()
-        tk.Radiobutton(self, text="Baja", variable=self.prioridad_var, value="Baja").pack()
+        self.frame_prioridad = tk.Frame(self)
+        self.frame_prioridad.pack()
 
-        # Lista donde se muestran las tareas
-        self.lista = tk.Listbox(self, width=40)
+        self.radio_alta = tk.Radiobutton(
+            self.frame_prioridad,
+            text="Alta",
+            variable=self.prioridad_var,
+            value="Alta",
+            font=("Arial", 9)
+        )
+        self.radio_alta.pack(side="left", padx=6)
+
+        self.radio_media = tk.Radiobutton(
+            self.frame_prioridad,
+            text="Media",
+            variable=self.prioridad_var,
+            value="Media",
+            font=("Arial", 9)
+        )
+        self.radio_media.pack(side="left", padx=6)
+
+        self.radio_baja = tk.Radiobutton(
+            self.frame_prioridad,
+            text="Baja",
+            variable=self.prioridad_var,
+            value="Baja",
+            font=("Arial", 9)
+        )
+        self.radio_baja.pack(side="left", padx=6)
+
+        # Lista visual de tareas
+        self.lista = tk.Listbox(
+            self,
+            width=34,
+            height=7,
+            font=("Arial", 9),
+            exportselection=False
+        )
         self.lista.pack(pady=10)
 
-        # Botones principales
-        tk.Button(self, text="Agregar", command=self.agregar_tarea).pack()
-        tk.Button(self, text="Comenzar", command=self.comenzar_temporizador).pack()
-        tk.Button(self, text="Pausar", command=self.pausar_temporizador).pack()
-        tk.Button(self, text="Completar", command=self.completar_tarea).pack()
-        tk.Button(self, text="Eliminar", command=self.eliminar_tarea).pack()
-        tk.Button(self, text="Reiniciar tareas", command=self.reiniciar_tareas).pack()
+        # Marco de botones
+        self.frame_botones = tk.Frame(self)
+        self.frame_botones.pack(pady=6)
 
-        # Etiqueta del temporizador
-        self.timer_label = tk.Label(self, text="00:00", font=("Arial", 24))
-        self.timer_label.pack()
+        self.boton_agregar = tk.Button(
+            self.frame_botones,
+            text="Agregar",
+            width=12,
+            font=("Arial", 9),
+            command=self.agregar_tarea
+        )
+        self.boton_agregar.grid(row=0, column=0, padx=4, pady=3)
 
-        # Mensajes
-        self.mensaje = tk.Label(self, text="")
-        self.mensaje.pack()
+        self.boton_comenzar = tk.Button(
+            self.frame_botones,
+            text="Comenzar",
+            width=12,
+            font=("Arial", 9),
+            command=self.comenzar_temporizador
+        )
+        self.boton_comenzar.grid(row=0, column=1, padx=4, pady=3)
 
-        self.recompensa_label = tk.Label(self, text="", fg="blue")
-        self.recompensa_label.pack()
+        self.boton_pausar = tk.Button(
+            self.frame_botones,
+            text="Pausar",
+            width=12,
+            font=("Arial", 9),
+            command=self.pausar_temporizador
+        )
+        self.boton_pausar.grid(row=1, column=0, padx=4, pady=3)
 
+        self.boton_completar = tk.Button(
+            self.frame_botones,
+            text="Completar",
+            width=12,
+            font=("Arial", 9),
+            command=self.completar_tarea
+        )
+        self.boton_completar.grid(row=1, column=1, padx=4, pady=3)
 
-# BLOQUE 3: MANEJO DE ARCHIVOS (JSON)
+        self.boton_eliminar = tk.Button(
+            self.frame_botones,
+            text="Eliminar",
+            width=12,
+            font=("Arial", 9),
+            command=self.eliminar_tarea
+        )
+        self.boton_eliminar.grid(row=2, column=0, padx=4, pady=3)
 
+        self.boton_reiniciar = tk.Button(
+            self.frame_botones,
+            text="Reiniciar tarea",
+            width=12,
+            font=("Arial", 9),
+            command=self.reiniciar_tarea
+        )
+        self.boton_reiniciar.grid(row=2, column=1, padx=4, pady=3)
 
+        self.boton_continuar = tk.Button(
+            self.frame_botones,
+            text="Continuar",
+            width=12,
+            font=("Arial", 9),
+            command=self.continuar_temporizador
+        )
+        self.boton_continuar.grid(row=3, column=0, padx=4, pady=3)
+
+        self.timer_label = tk.Label(self, text="00:00", font=("Arial", 18, "bold"))
+        self.timer_label.pack(pady=(10, 5))
+
+        self.mensaje = tk.Label(self, text="", font=("Arial", 9), wraplength=320)
+        self.mensaje.pack(pady=3)
+
+        self.recompensa_label = tk.Label(
+            self,
+            text="",
+            font=("Arial", 9, "bold"),
+            fg="blue",
+            wraplength=320,
+            justify="center"
+        )
+        self.recompensa_label.pack(pady=4)
+
+        self.boton_salir = tk.Button(
+            self,
+            text="Salir",
+            width=12,
+            font=("Arial", 9),
+            command=self.destroy
+        )
+        self.boton_salir.pack(pady=8)
+
+    # ========================================================
+    # BLOQUE 3: CARGAR TAREAS DESDE JSON
+    # ========================================================
     def cargar_tareas(self):
-        # Carga las tareas desde el archivo JSON si existe
         if os.path.exists(self.archivo):
-            with open(self.archivo, "r", encoding="utf-8") as f:
-                self.tareas = json.load(f)
+            try:
+                with open(self.archivo, "r", encoding="utf-8") as archivo:
+                    self.tareas = json.load(archivo)
+            except Exception:
+                self.tareas = []
+        else:
+            self.tareas = []
 
+    # ========================================================
+    # BLOQUE 4: GUARDAR TAREAS EN JSON
+    # ========================================================
     def guardar_tareas(self):
-        # Guarda las tareas en el archivo JSON
-        with open(self.archivo, "w", encoding="utf-8") as f:
-            json.dump(self.tareas, f, indent=4)
+        with open(self.archivo, "w", encoding="utf-8") as archivo:
+            json.dump(self.tareas, archivo, indent=4, ensure_ascii=False)
 
+    # ========================================================
+    # BLOQUE 5: COLOR POR PRIORIDAD
+    # ========================================================
+    def color_prioridad(self, prioridad):
+        if prioridad == "Alta":
+            return "red"
+        elif prioridad == "Media":
+            return "orange"
+        else:
+            return "green"
 
-# BLOQUE 4: ACTUALIZACIÓN DE LA LISTA VISUAL
-
-
+    # ========================================================
+    # BLOQUE 6: ACTUALIZAR LISTA VISUAL
+    # ========================================================
     def actualizar_lista(self):
-        # Limpia la lista
         self.lista.delete(0, tk.END)
 
-        # Vuelve a insertar todas las tareas
-        for tarea in self.tareas:
+        for i, tarea in enumerate(self.tareas):
             texto = f'{tarea["nombre"]} - {tarea["tiempo"]} min - {tarea["prioridad"]}'
 
-            # Si la tarea está completada, añade ✔
             if tarea["completada"]:
-                texto += " ✔"
+                texto += " - ✔"
 
             self.lista.insert(tk.END, texto)
+            self.lista.itemconfig(i, fg=self.color_prioridad(tarea["prioridad"]))
 
-# BLOQUE 5: FUNCIONES PRINCIPALES
-
-
+    # ========================================================
+    # BLOQUE 7: AGREGAR TAREA
+    # ========================================================
     def agregar_tarea(self):
-        # Obtiene datos del usuario
-        nombre = self.entrada.get()
-        tiempo = self.tiempo_entry.get()
-        descanso = self.descanso_entry.get()
+        nombre = self.entrada.get().strip()
+        tiempo = self.tiempo_entry.get().strip()
+        descanso = self.descanso_entry.get().strip()
+        prioridad = self.prioridad_var.get()
 
-        # Validaciones básicas
-        if not nombre or not tiempo.isdigit():
-            messagebox.showerror("Error", "Datos inválidos")
+        if not nombre:
+            messagebox.showerror("Error", "Debes escribir una tarea.")
             return
 
-        # Crear nueva tarea
-        tarea = {
+        if not tiempo.isdigit() or int(tiempo) <= 0:
+            messagebox.showerror("Error", "El tiempo de trabajo debe ser un número mayor que 0.")
+            return
+
+        if not descanso.isdigit() or int(descanso) <= 0:
+            messagebox.showerror("Error", "El tiempo de descanso debe ser un número mayor que 0.")
+            return
+
+        nueva_tarea = {
             "nombre": nombre,
             "tiempo": int(tiempo),
             "descanso": int(descanso),
-            "prioridad": self.prioridad_var.get(),
+            "prioridad": prioridad,
             "completada": False
         }
 
-        # Guardar tarea
-        self.tareas.append(tarea)
+        self.tareas.append(nueva_tarea)
         self.guardar_tareas()
         self.actualizar_lista()
 
+        self.entrada.delete(0, tk.END)
+        self.tiempo_entry.delete(0, tk.END)
+        self.descanso_entry.delete(0, tk.END)
+        self.descanso_entry.insert(0, "5")
+        self.prioridad_var.set("Media")
 
-# BLOQUE 6: TEMPORIZADOR
+        self.mensaje.config(text="Tarea agregada.")
+        self.recompensa_label.config(text="")
 
-
+    # ========================================================
+    # BLOQUE 8: COMENZAR TEMPORIZADOR
+    # Inicia desde cero la tarea seleccionada.
+    # ========================================================
     def comenzar_temporizador(self):
-        seleccion = self.lista.curselection()
-
-        if not seleccion:
+        if self.temporizador_activo:
             return
 
-        self.indice_actual = seleccion[0]
-        tarea = self.tareas[self.indice_actual]
+        seleccion = self.lista.curselection()
+        if not seleccion:
+            messagebox.showwarning("Aviso", "Selecciona una tarea para comenzar.")
+            return
 
-        self.tiempo_restante = tarea["tiempo"] * 60
+        indice = seleccion[0]
+        tarea = self.tareas[indice]
+
+        if tarea["completada"]:
+            messagebox.showinfo("Aviso", "Esa tarea ya está completada.")
+            return
+
+        self.indice_actual = indice
+
+        # Si no está en descanso, reinicia el tiempo de trabajo
+        if not self.en_descanso:
+            self.tiempo_restante = tarea["tiempo"] * 60
+
+        # Si estaba en descanso pero no hay tiempo guardado, lo vuelve a cargar
+        if self.en_descanso and self.descanso_restante <= 0:
+            self.descanso_restante = tarea["descanso"] * 60
+
         self.temporizador_activo = True
+        self.actualizar_temporizador()
+
+    # ========================================================
+    # BLOQUE 9: CONTINUAR TEMPORIZADOR
+    # Reanuda desde donde fue pausado.
+    # ========================================================
+    def continuar_temporizador(self):
+        if self.temporizador_activo:
+            return
+
+        if self.tiempo_restante <= 0 and self.descanso_restante <= 0:
+            messagebox.showwarning("Aviso", "No hay temporizador para continuar.")
+            return
+
+        self.temporizador_activo = True
+
+        if self.en_descanso:
+            self.mensaje.config(text="Reanudando descanso...")
+        else:
+            self.mensaje.config(text="Reanudando trabajo...")
 
         self.actualizar_temporizador()
 
+    # ========================================================
+    # BLOQUE 10: ACTUALIZAR TEMPORIZADOR
+    # ========================================================
     def actualizar_temporizador(self):
-        # Controla el conteo regresivo
         if not self.temporizador_activo:
             return
 
-        minutos = self.tiempo_restante // 60
-        segundos = self.tiempo_restante % 60
+        if self.en_descanso:
+            minutos = self.descanso_restante // 60
+            segundos = self.descanso_restante % 60
+            self.timer_label.config(text=f"{minutos:02}:{segundos:02}")
+            self.mensaje.config(text="Tiempo de descanso.")
 
-        self.timer_label.config(text=f"{minutos:02}:{segundos:02}")
-
-        if self.tiempo_restante > 0:
-            self.tiempo_restante -= 1
-
-            # after ejecuta esta función cada 1 segundo
-            self.after_id = self.after(1000, self.actualizar_temporizador)
+            if self.descanso_restante > 0:
+                self.descanso_restante -= 1
+                self.after_id = self.after(1000, self.actualizar_temporizador)
+            else:
+                self.en_descanso = False
+                self.temporizador_activo = False
+                self.after_id = None
+                self.timer_label.config(text="00:00")
+                self.mensaje.config(text="Descanso terminado.")
         else:
-            self.temporizador_activo = False
-            self.mensaje.config(text="Tiempo terminado")
+            minutos = self.tiempo_restante // 60
+            segundos = self.tiempo_restante % 60
+            self.timer_label.config(text=f"{minutos:02}:{segundos:02}")
+            self.mensaje.config(text="Trabajando en la tarea...")
 
+            if self.tiempo_restante > 0:
+                self.tiempo_restante -= 1
+                self.after_id = self.after(1000, self.actualizar_temporizador)
+            else:
+                self.temporizador_activo = False
+                self.after_id = None
+                self.timer_label.config(text="00:00")
+                self.mensaje.config(text="Tiempo de trabajo terminado. Ahora descansa.")
+                self.iniciar_descanso()
 
-# BLOQUE 7: CONTROL DEL TEMPORIZADOR
+    # ========================================================
+    # BLOQUE 11: INICIAR DESCANSO
+    # ========================================================
+    def iniciar_descanso(self):
+        if self.indice_actual is None:
+            return
 
+        tarea = self.tareas[self.indice_actual]
+        self.descanso_restante = tarea["descanso"] * 60
+        self.en_descanso = True
+        self.temporizador_activo = True
+        self.actualizar_temporizador()
 
+    # ========================================================
+    # BLOQUE 12: PAUSAR TEMPORIZADOR
+    # ========================================================
     def pausar_temporizador(self):
-        # Detiene el temporizador
         self.temporizador_activo = False
 
         if self.after_id:
             self.after_cancel(self.after_id)
+            self.after_id = None
 
+        self.mensaje.config(text="Temporizador pausado.")
 
-# BLOQUE 8: ACCIONES SOBRE TAREAS
-
-
+    # ========================================================
+    # BLOQUE 13: COMPLETAR TAREA
+    # ========================================================
     def completar_tarea(self):
         seleccion = self.lista.curselection()
-
         if not seleccion:
+            messagebox.showwarning("Aviso", "Selecciona una tarea para completar.")
             return
 
-        self.tareas[seleccion[0]]["completada"] = True
+        indice = seleccion[0]
+        self.tareas[indice]["completada"] = True
         self.guardar_tareas()
         self.actualizar_lista()
 
-        # Verifica si todas están completas
-        if all(t["completada"] for t in self.tareas):
-            self.recompensa_label.config(
-                text="¡Felicitaciones! Has completado todas las tareas"
-            )
-
-    def eliminar_tarea(self):
-        seleccion = self.lista.curselection()
-
-        if not seleccion:
-            return
-
-        del self.tareas[seleccion[0]]
-        self.guardar_tareas()
-        self.actualizar_lista()
-
-
-# BLOQUE 9: REINICIAR TAREAS (EL ERROR QUE TENÍAS)
-
-
-    def reiniciar_tareas(self):
-
-        # Detener temporizador
         self.temporizador_activo = False
-
         if self.after_id:
             self.after_cancel(self.after_id)
+            self.after_id = None
 
-        # Resetear estado de todas las tareas
-        for tarea in self.tareas:
-            tarea["completada"] = False
-
-        # Resetear variables
         self.tiempo_restante = 0
+        self.descanso_restante = 0
         self.en_descanso = False
         self.indice_actual = None
 
-        # Actualizar interfaz
         self.timer_label.config(text="00:00")
-        self.mensaje.config(text="Tareas reiniciadas")
-        self.recompensa_label.config(text="")
+        self.mensaje.config(text="Tarea completada.")
+
+        if self.todas_completadas():
+            self.recompensa_label.config(
+                text="¡Felicitaciones! Has cumplido con todas tus tareas. Te has ganado una recompensa."
+            )
+        else:
+            self.recompensa_label.config(text="")
+
+    # ========================================================
+    # BLOQUE 14: ELIMINAR TAREA
+    # ========================================================
+    def eliminar_tarea(self):
+        seleccion = self.lista.curselection()
+        if not seleccion:
+            messagebox.showwarning("Aviso", "Selecciona una tarea para eliminar.")
+            return
+
+        indice = seleccion[0]
+        del self.tareas[indice]
 
         self.guardar_tareas()
         self.actualizar_lista()
 
+        self.temporizador_activo = False
+        if self.after_id:
+            self.after_cancel(self.after_id)
+            self.after_id = None
 
-# BLOQUE 10: EJECUCIÓN DEL PROGRAMA
+        self.tiempo_restante = 0
+        self.descanso_restante = 0
+        self.en_descanso = False
+        self.indice_actual = None
+
+        self.timer_label.config(text="00:00")
+        self.mensaje.config(text="Tarea eliminada.")
+        self.recompensa_label.config(text="")
+
+    # ========================================================
+    # BLOQUE 15: REINICIAR SOLO UNA TAREA
+    # ========================================================
+    def reiniciar_tarea(self):
+        seleccion = self.lista.curselection()
+        if not seleccion:
+            messagebox.showwarning("Aviso", "Selecciona una tarea para reiniciar.")
+            return
+
+        indice = seleccion[0]
+
+        if self.indice_actual == indice:
+            self.temporizador_activo = False
+
+            if self.after_id:
+                self.after_cancel(self.after_id)
+                self.after_id = None
+
+            self.tiempo_restante = 0
+            self.descanso_restante = 0
+            self.en_descanso = False
+            self.indice_actual = None
+            self.timer_label.config(text="00:00")
+
+        self.tareas[indice]["completada"] = False
+
+        self.guardar_tareas()
+        self.actualizar_lista()
+
+        self.mensaje.config(text="La tarea seleccionada fue reiniciada.")
+        self.recompensa_label.config(text="")
+
+    # ========================================================
+    # BLOQUE 16: VERIFICAR SI TODAS LAS TAREAS ESTÁN COMPLETAS
+    # ========================================================
+    def todas_completadas(self):
+        if not self.tareas:
+            return False
+        return all(tarea["completada"] for tarea in self.tareas)
 
 
+# ============================================================
+# BLOQUE 17: PUNTO DE ENTRADA
+# ============================================================
 if __name__ == "__main__":
     app = PomodoroApp()
     app.mainloop()
