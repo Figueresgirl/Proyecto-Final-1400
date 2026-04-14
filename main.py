@@ -1,9 +1,6 @@
-from pomodoroapp import PomodoroApp
-
-
 def main():
     app = PomodoroApp()
-    app.run()
+    app.mainloop()
 
 
 if __name__ == "__main__":
