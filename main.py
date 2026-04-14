@@ -1,4 +1,4 @@
-# Importa la clase desde pomodoroapp.py
+# Importa la clase desde PomodoroApp.py
 from pomodoroapp import PomodoroApp
 
 
