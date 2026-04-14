@@ -1,18 +1,18 @@
 [
     {
-        "nombre": "caminar",
+        "nombre": "",
         "tiempo": 1,
         "prioridad": "Media",
         "completada": true
     },
     {
-        "nombre": "estudiar Python",
+        "nombre": "",
         "tiempo": 25,
         "prioridad": "Alta",
         "completada": false
     },
     {
-        "nombre": "leer",
+        "nombre": "",
         "tiempo": 15,
         "prioridad": "Baja",
         "completada": false
