@@ -1,10 +1,13 @@
-from app import PomodoroApp
+# Importa la clase desde pomodoroapp.py
+from pomodoroapp import PomodoroApp
 
 
+# Función principal (punto de entrada del programa)
 def main():
-    app = PomodoroApp()
-    app.run()
+    app = PomodoroApp()  # Crear la aplicación
+    app.run()            # Ejecutarla
 
 
+# Ejecutar solo si este archivo es el principal
 if __name__ == "__main__":
     main()
