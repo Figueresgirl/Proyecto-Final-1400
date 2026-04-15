@@ -59,7 +59,7 @@ class PomodoroApp(tk.Tk):
         self.actualizar_lista()
 
         # ----------------------------------------------------
-        # Manejo seguro del cierre de ventana
+        # Cierre seguro de la aplicación
         # ----------------------------------------------------
         self.protocol("WM_DELETE_WINDOW", self.cerrar_aplicacion)
 
@@ -231,8 +231,9 @@ class PomodoroApp(tk.Tk):
                 with open(self.archivo, "r", encoding="utf-8") as archivo:
                     datos = json.load(archivo)
 
+                self.tareas = []
+
                 if isinstance(datos, list):
-                    self.tareas = []
                     for tarea in datos:
                         if isinstance(tarea, dict):
                             tarea_normalizada = {
@@ -243,8 +244,6 @@ class PomodoroApp(tk.Tk):
                                 "completada": bool(tarea.get("completada", False))
                             }
                             self.tareas.append(tarea_normalizada)
-                else:
-                    self.tareas = []
 
             except Exception:
                 self.tareas = []
@@ -346,13 +345,20 @@ class PomodoroApp(tk.Tk):
             messagebox.showinfo("Aviso", "Esa tarea ya está completada.")
             return
 
-        self.detener_temporizador()
+        if self.after_id:
+            self.after_cancel(self.after_id)
+            self.after_id = None
 
         self.indice_actual = indice
         self.en_descanso = False
+        self.temporizador_activo = True
         self.tiempo_restante = tarea["tiempo"] * 60
         self.descanso_restante = tarea["descanso"] * 60
-        self.temporizador_activo = True
+
+        minutos = self.tiempo_restante // 60
+        segundos = self.tiempo_restante % 60
+        self.timer_label.config(text=f"{minutos:02}:{segundos:02}")
+
         self.mensaje.config(text="Trabajando en la tarea...")
         self.actualizar_temporizador()
 
@@ -368,8 +374,12 @@ class PomodoroApp(tk.Tk):
             messagebox.showwarning("Aviso", "No hay una tarea pausada para continuar.")
             return
 
-        if self.tiempo_restante <= 0 and self.descanso_restante <= 0:
-            messagebox.showwarning("Aviso", "No hay temporizador para continuar.")
+        if not self.en_descanso and self.tiempo_restante <= 0:
+            messagebox.showwarning("Aviso", "No hay tiempo de trabajo para continuar.")
+            return
+
+        if self.en_descanso and self.descanso_restante <= 0:
+            messagebox.showwarning("Aviso", "No hay tiempo de descanso para continuar.")
             return
 
         self.temporizador_activo = True
@@ -386,10 +396,6 @@ class PomodoroApp(tk.Tk):
     # ========================================================
     def actualizar_temporizador(self):
         if not self.temporizador_activo:
-            return
-
-        if self.indice_actual is None:
-            self.detener_temporizador()
             return
 
         if self.en_descanso:
@@ -517,17 +523,29 @@ class PomodoroApp(tk.Tk):
             return
 
         indice = seleccion[0]
+        tarea = self.tareas[indice]
 
-        if self.indice_actual == indice:
-            self.detener_temporizador()
-            self.timer_label.config(text="00:00")
+        if self.after_id:
+            self.after_cancel(self.after_id)
+            self.after_id = None
+
+        self.temporizador_activo = False
+        self.en_descanso = False
 
         self.tareas[indice]["completada"] = False
+
+        self.indice_actual = indice
+        self.tiempo_restante = tarea["tiempo"] * 60
+        self.descanso_restante = tarea["descanso"] * 60
+
+        minutos = self.tiempo_restante // 60
+        segundos = self.tiempo_restante % 60
+        self.timer_label.config(text=f"{minutos:02}:{segundos:02}")
 
         self.guardar_tareas()
         self.actualizar_lista()
 
-        self.mensaje.config(text="La tarea seleccionada fue reiniciada.")
+        self.mensaje.config(text="La tarea fue reiniciada correctamente.")
         self.recompensa_label.config(text="")
 
     # ========================================================
@@ -551,13 +569,14 @@ class PomodoroApp(tk.Tk):
         self.tiempo_restante = 0
         self.descanso_restante = 0
         self.en_descanso = False
-        self.indice_actual = None
 
     # ========================================================
     # BLOQUE 18: CERRAR APLICACIÓN
     # ========================================================
     def cerrar_aplicacion(self):
-        self.detener_temporizador()
+        if self.after_id:
+            self.after_cancel(self.after_id)
+            self.after_id = None
         self.destroy()
 
 
