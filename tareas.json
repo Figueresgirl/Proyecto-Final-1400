@@ -1,1 +1,16 @@
-[]
+[
+    {
+        "nombre": "Estudiar Python",
+        "tiempo": 25,
+        "descanso": 5,
+        "prioridad": "Alta",
+        "completada": false
+    },
+    {
+        "nombre": "Leer apuntes",
+        "tiempo": 15,
+        "descanso": 5,
+        "prioridad": "Media",
+        "completada": false
+    }
+]
