@@ -58,6 +58,11 @@ class PomodoroApp(tk.Tk):
         self.crear_widgets()
         self.actualizar_lista()
 
+        # ----------------------------------------------------
+        # Manejo seguro del cierre de ventana
+        # ----------------------------------------------------
+        self.protocol("WM_DELETE_WINDOW", self.cerrar_aplicacion)
+
     # ========================================================
     # BLOQUE 2: CREACIÓN DE LA INTERFAZ
     # Aquí se crean etiquetas, entradas, botones y lista.
@@ -118,8 +123,8 @@ class PomodoroApp(tk.Tk):
         # Lista visual de tareas
         self.lista = tk.Listbox(
             self,
-            width=34,
-            height=7,
+            width=40,
+            height=8,
             font=("Arial", 9),
             exportselection=False
         )
@@ -213,7 +218,7 @@ class PomodoroApp(tk.Tk):
             text="Salir",
             width=12,
             font=("Arial", 9),
-            command=self.destroy
+            command=self.cerrar_aplicacion
         )
         self.boton_salir.pack(pady=8)
 
@@ -224,7 +229,23 @@ class PomodoroApp(tk.Tk):
         if os.path.exists(self.archivo):
             try:
                 with open(self.archivo, "r", encoding="utf-8") as archivo:
-                    self.tareas = json.load(archivo)
+                    datos = json.load(archivo)
+
+                if isinstance(datos, list):
+                    self.tareas = []
+                    for tarea in datos:
+                        if isinstance(tarea, dict):
+                            tarea_normalizada = {
+                                "nombre": tarea.get("nombre", ""),
+                                "tiempo": int(tarea.get("tiempo", 25)),
+                                "descanso": int(tarea.get("descanso", 5)),
+                                "prioridad": tarea.get("prioridad", "Media"),
+                                "completada": bool(tarea.get("completada", False))
+                            }
+                            self.tareas.append(tarea_normalizada)
+                else:
+                    self.tareas = []
+
             except Exception:
                 self.tareas = []
         else:
@@ -234,8 +255,11 @@ class PomodoroApp(tk.Tk):
     # BLOQUE 4: GUARDAR TAREAS EN JSON
     # ========================================================
     def guardar_tareas(self):
-        with open(self.archivo, "w", encoding="utf-8") as archivo:
-            json.dump(self.tareas, archivo, indent=4, ensure_ascii=False)
+        try:
+            with open(self.archivo, "w", encoding="utf-8") as archivo:
+                json.dump(self.tareas, archivo, indent=4, ensure_ascii=False)
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudieron guardar las tareas.\n{e}")
 
     # ========================================================
     # BLOQUE 5: COLOR POR PRIORIDAD
@@ -255,7 +279,7 @@ class PomodoroApp(tk.Tk):
         self.lista.delete(0, tk.END)
 
         for i, tarea in enumerate(self.tareas):
-            texto = f'{tarea["nombre"]} - {tarea["tiempo"]} min - {tarea["prioridad"]}'
+            texto = f'{tarea["nombre"]} - {tarea["tiempo"]} min - Descanso: {tarea["descanso"]} min - {tarea["prioridad"]}'
 
             if tarea["completada"]:
                 texto += " - ✔"
@@ -310,9 +334,6 @@ class PomodoroApp(tk.Tk):
     # Inicia desde cero la tarea seleccionada.
     # ========================================================
     def comenzar_temporizador(self):
-        if self.temporizador_activo:
-            return
-
         seleccion = self.lista.curselection()
         if not seleccion:
             messagebox.showwarning("Aviso", "Selecciona una tarea para comenzar.")
@@ -325,17 +346,14 @@ class PomodoroApp(tk.Tk):
             messagebox.showinfo("Aviso", "Esa tarea ya está completada.")
             return
 
+        self.detener_temporizador()
+
         self.indice_actual = indice
-
-        # Si no está en descanso, reinicia el tiempo de trabajo
-        if not self.en_descanso:
-            self.tiempo_restante = tarea["tiempo"] * 60
-
-        # Si estaba en descanso pero no hay tiempo guardado, lo vuelve a cargar
-        if self.en_descanso and self.descanso_restante <= 0:
-            self.descanso_restante = tarea["descanso"] * 60
-
+        self.en_descanso = False
+        self.tiempo_restante = tarea["tiempo"] * 60
+        self.descanso_restante = tarea["descanso"] * 60
         self.temporizador_activo = True
+        self.mensaje.config(text="Trabajando en la tarea...")
         self.actualizar_temporizador()
 
     # ========================================================
@@ -344,6 +362,10 @@ class PomodoroApp(tk.Tk):
     # ========================================================
     def continuar_temporizador(self):
         if self.temporizador_activo:
+            return
+
+        if self.indice_actual is None:
+            messagebox.showwarning("Aviso", "No hay una tarea pausada para continuar.")
             return
 
         if self.tiempo_restante <= 0 and self.descanso_restante <= 0:
@@ -364,6 +386,10 @@ class PomodoroApp(tk.Tk):
     # ========================================================
     def actualizar_temporizador(self):
         if not self.temporizador_activo:
+            return
+
+        if self.indice_actual is None:
+            self.detener_temporizador()
             return
 
         if self.en_descanso:
@@ -414,6 +440,10 @@ class PomodoroApp(tk.Tk):
     # BLOQUE 12: PAUSAR TEMPORIZADOR
     # ========================================================
     def pausar_temporizador(self):
+        if not self.temporizador_activo:
+            self.mensaje.config(text="El temporizador ya está pausado.")
+            return
+
         self.temporizador_activo = False
 
         if self.after_id:
@@ -427,25 +457,20 @@ class PomodoroApp(tk.Tk):
     # ========================================================
     def completar_tarea(self):
         seleccion = self.lista.curselection()
-        if not seleccion:
+
+        if seleccion:
+            indice = seleccion[0]
+        elif self.indice_actual is not None:
+            indice = self.indice_actual
+        else:
             messagebox.showwarning("Aviso", "Selecciona una tarea para completar.")
             return
 
-        indice = seleccion[0]
         self.tareas[indice]["completada"] = True
         self.guardar_tareas()
         self.actualizar_lista()
 
-        self.temporizador_activo = False
-        if self.after_id:
-            self.after_cancel(self.after_id)
-            self.after_id = None
-
-        self.tiempo_restante = 0
-        self.descanso_restante = 0
-        self.en_descanso = False
-        self.indice_actual = None
-
+        self.detener_temporizador()
         self.timer_label.config(text="00:00")
         self.mensaje.config(text="Tarea completada.")
 
@@ -466,22 +491,19 @@ class PomodoroApp(tk.Tk):
             return
 
         indice = seleccion[0]
+
+        if self.indice_actual == indice:
+            self.detener_temporizador()
+            self.timer_label.config(text="00:00")
+
+        elif self.indice_actual is not None and indice < self.indice_actual:
+            self.indice_actual -= 1
+
         del self.tareas[indice]
 
         self.guardar_tareas()
         self.actualizar_lista()
 
-        self.temporizador_activo = False
-        if self.after_id:
-            self.after_cancel(self.after_id)
-            self.after_id = None
-
-        self.tiempo_restante = 0
-        self.descanso_restante = 0
-        self.en_descanso = False
-        self.indice_actual = None
-
-        self.timer_label.config(text="00:00")
         self.mensaje.config(text="Tarea eliminada.")
         self.recompensa_label.config(text="")
 
@@ -497,16 +519,7 @@ class PomodoroApp(tk.Tk):
         indice = seleccion[0]
 
         if self.indice_actual == indice:
-            self.temporizador_activo = False
-
-            if self.after_id:
-                self.after_cancel(self.after_id)
-                self.after_id = None
-
-            self.tiempo_restante = 0
-            self.descanso_restante = 0
-            self.en_descanso = False
-            self.indice_actual = None
+            self.detener_temporizador()
             self.timer_label.config(text="00:00")
 
         self.tareas[indice]["completada"] = False
@@ -525,9 +538,31 @@ class PomodoroApp(tk.Tk):
             return False
         return all(tarea["completada"] for tarea in self.tareas)
 
+    # ========================================================
+    # BLOQUE 17: DETENER TEMPORIZADOR DE FORMA SEGURA
+    # ========================================================
+    def detener_temporizador(self):
+        self.temporizador_activo = False
+
+        if self.after_id:
+            self.after_cancel(self.after_id)
+            self.after_id = None
+
+        self.tiempo_restante = 0
+        self.descanso_restante = 0
+        self.en_descanso = False
+        self.indice_actual = None
+
+    # ========================================================
+    # BLOQUE 18: CERRAR APLICACIÓN
+    # ========================================================
+    def cerrar_aplicacion(self):
+        self.detener_temporizador()
+        self.destroy()
+
 
 # ============================================================
-# BLOQUE 17: PUNTO DE ENTRADA
+# BLOQUE 19: PUNTO DE ENTRADA
 # ============================================================
 if __name__ == "__main__":
     app = PomodoroApp()
